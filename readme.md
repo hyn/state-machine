@@ -5,10 +5,17 @@ from States through Transitions while emitting events along the way.
 
 ## Example
 
-Let's say we have a [Cat](tests/stubs/Models/Cat.php), who likes two things:
+Let's say we have a [Cat](tree/master/tests/stubs/Models/Cat.php), who does two things, being
 
-- [Sleeping](tests/stubs/States/Cat/Sleeping.php) and being
-- [Awake](tests/stubs/States/Cat/Awake.php)
+- [Asleep](tree/master/tests/stubs/States/Cat/Asleep.php) and
+- [Awake](tree/master/tests/stubs/States/Cat/Awake.php)
+
+In order to become Awake from his initial state being Asleep, the cat has to
+
+- [WakeUp](tree/master/tests/stubs/Transitions/Cat/WakesUp.php)
+
+Now if we look at the [state machine definition](tree/master/tests/stubs/Definitions/CatDefinition.php) we can 
+see the above is perfectly mapped out.
 
 ## Installation
 
