@@ -4,7 +4,8 @@ namespace Hyn\Statemachine\Stubs\Definitions;
 
 use Hyn\Statemachine\Contracts\MachineDefinitionContract;
 use Hyn\Statemachine\Stubs\Models\Cat;
-use Hyn\Statemachine\Stubs\States\Cat\Sleeping;
+use Hyn\Statemachine\Stubs\States\Cat\Asleep;
+use Hyn\Statemachine\Stubs\States\Cat\Awake;
 use Hyn\Statemachine\Stubs\Transitions\Cat\WakesUp;
 
 class CatDefinition implements MachineDefinitionContract
@@ -33,7 +34,8 @@ class CatDefinition implements MachineDefinitionContract
     {
         return [
             'states' => [
-                Sleeping::class
+                Asleep::class,
+                Awake::class
             ],
             'transitions' => [
                 WakesUp::class

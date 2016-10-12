@@ -5,7 +5,7 @@ namespace Hyn\Statemachine\Stubs\States\Cat;
 use Hyn\Statemachine\State;
 use Hyn\Statemachine\Stubs\Transitions\Cat\WakesUp;
 
-class Sleeping extends State
+class Asleep extends State
 {
     public function isInitial() : bool
     {
