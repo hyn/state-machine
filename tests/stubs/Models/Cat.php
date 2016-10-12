@@ -6,7 +6,7 @@ use Hyn\Statemachine\Contracts\ProcessedByStatemachine;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * @property bool $born
+ * @property string $name
  */
 class Cat extends Model implements ProcessedByStatemachine
 {
