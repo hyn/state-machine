@@ -2,9 +2,11 @@
 
 namespace Hyn\Statemachine\Tests;
 
+use Hyn\Statemachine\State;
 use Hyn\Statemachine\Statemachine;
 use Hyn\Statemachine\Stubs\Definitions\CatDefinition;
 use Hyn\Statemachine\Stubs\Models\Cat;
+use Hyn\Statemachine\Transition;
 
 class FelineTest extends TestCase
 {
@@ -55,8 +57,21 @@ class FelineTest extends TestCase
     /**
      * @test
      */
+    public function has_transitions_to_move_through()
+    {
+        $transition = $this->machine->identifyNextTransition();
+
+        $this->assertTrue($transition instanceof Transition);
+        $this->assertGreaterThan(0, count($transition->suggests()));
+    }
+
+    /**
+     * @test
+     */
     public function moves_through_a_transition()
     {
-        $this->machine->forward();
+        $state = $this->machine->forward();
+
+        $this->assertTrue($state instanceof State);
     }
 }
