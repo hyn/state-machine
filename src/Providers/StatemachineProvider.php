@@ -9,10 +9,25 @@ class StatemachineProvider extends ServiceProvider
 {
     public function register()
     {
+        $this->registerCommands();
+        $this->registerConfigurations();
+    }
+
+    protected function registerCommands()
+    {
         $this->app->bind('command.state-machine:processor', Processor::class);
 
         $this->commands([
             'command.state-machine:processor'
         ]);
+    }
+
+    protected function registerConfigurations()
+    {
+        $this->publishes([
+            __DIR__ . '/../config/state-machine.php' => config_path('state-machine.php')
+        ], 'config');
+
+        $this->mergeConfigFrom(config_path('state-machine.php'), 'state-machine');
     }
 }

@@ -9,20 +9,7 @@ from States through Transitions while emitting events along the way.
 composer require hyn/state-machine
 ```
 
-In case you're using Laravel, register the service provider to make use of the State machine processor.
-
-For this to work change the `config/app.php` and add an entry under `providers`:
-
-```php
-    'providers' => [
-        ...
-        Hyn\Statemachine\Providers\StatemachineProvider::class,
-    ];
-```
-
-## Documentation
-
-Read more about the package on [state-machine.readme.io](https://state-machine.readme.io/docs).
+Read more about installation and configuration on [state-machine.readme.io](https://state-machine.readme.io/docs).
 
 ## Tests
 
