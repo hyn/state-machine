@@ -3,7 +3,7 @@
 namespace Hyn\Statemachine\Stubs\Transitions\Cat;
 
 use Hyn\Statemachine\Contracts\StateContract;
-use Hyn\Statemachine\Stubs\States\Cat\Sleeping;
+use Hyn\Statemachine\Stubs\States\Cat\Awake;
 use Hyn\Statemachine\Transition;
 
 class WakesUp extends Transition
@@ -26,7 +26,7 @@ class WakesUp extends Transition
     public function suggests() : array
     {
         return [
-            Sleeping::class,
+            Awake::class,
         ];
     }
 
@@ -37,7 +37,7 @@ class WakesUp extends Transition
      */
     public function fire() : StateContract
     {
-        return new Sleeping($this->model);
+        return new Awake($this->model);
     }
 
     /**

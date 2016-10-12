@@ -12,12 +12,19 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
 
     /**
+     * @var string
+     */
+    protected $databaseFile;
+
+    /**
      * @var bool
      */
     protected $booted = false;
 
     public function setUp()
     {
+        $this->databaseFile = __DIR__ . '/../database/testing.sqlite';
+
         $this->setUpEloquent();
 
         $this->boot();
@@ -26,7 +33,10 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
     protected function setUpEloquent()
     {
         if (!$this->booted) {
-            touch(__DIR__ . '/../database/testing.sqlite');
+
+            $this->removeDatabase();
+
+            touch($this->databaseFile);
 
             $container = new Container;
             Container::setInstance($container);
@@ -34,8 +44,8 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
             $capsule = new Manager($container);
             $capsule->addConnection([
-                'driver' => 'sqlite',
-                'database' => __DIR__ . '/../database/testing.sqlite'
+                'driver'   => 'sqlite',
+                'database' => $this->databaseFile
             ]);
 
             $capsule->setEventDispatcher(new Dispatcher($container));
@@ -54,6 +64,13 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         }
     }
 
+    protected function removeDatabase()
+    {
+        if (file_exists($this->databaseFile)) {
+            unlink($this->databaseFile);
+        }
+    }
+
     protected function boot()
     {
         // ..
@@ -64,7 +81,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         $this->down();
 
         if ($this->booted) {
-            unlink(__DIR__ . '/../database/testing.sqlite');
+            $this->removeDatabase();
         }
     }
 
