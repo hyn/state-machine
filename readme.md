@@ -20,6 +20,10 @@ For this to work change the `config/app.php` and add an entry under `providers`:
     ];
 ```
 
+## Documentation
+
+Read more about the package on [state-machine.readme.io](https://state-machine.readme.io/docs).
+
 ## Tests
 
 Run the tests with:
