@@ -1,9 +1,7 @@
-# state machine
+# State machine
 
-This package allows you to easily set up a state machine. A few strategies which deserve my focus:
-
-- As flexible as possible.
-- Event driven.
+The state machine is a flexible library that helps you move Eloquent models 
+from States through Transitions while emitting events along the way. 
 
 ## Installation
 
