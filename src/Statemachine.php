@@ -306,7 +306,7 @@ class Statemachine implements StatemachineContract
 
         $this->model->state = "{$type}.{$stateOrTransition->name()}";
 
-        if ($this->model->isDirty('state')) {
+        if ($this->model->isDirty('state') && $this->model->exists) {
             $this->model->save();
         }
     }
