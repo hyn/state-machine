@@ -23,7 +23,7 @@ the above is perfectly mapped out.
 composer require hyn/state-machine
 ```
 
-Read more about installation and configuration on [state-machine.readme.io](https://state-machine.readme.io/docs).
+__Read more__ about installation and configuration on [state-machine.readme.io](https://state-machine.readme.io/docs).
 
 ## Tests
 
