@@ -172,6 +172,11 @@ class Statemachine implements StatemachineContract
         /** @var TransitionContract $transition */
         foreach ($this->transitionInstances($currentState) as $transition) {
             if (!$nextState || ($nextState && !in_array($nextState, $transition->suggests()))) {
+                // Do not offer a transition that can't be automated.
+                if (!$nextState && app()->runningInConsole() && !$transition->automated()) {
+                    continue;
+                }
+
                 if ($transition->requirementsMet()) {
                     $requirementsMet->put($transition->name(), $transition);
                 }
@@ -202,8 +207,10 @@ class Statemachine implements StatemachineContract
         if ($state) {
             foreach ($state->transitions() as $transitionClass) {
                 if (!class_exists($transitionClass)) {
-                    throw new TransitioningException("$transitionClass not found" .
-                        ($state ? " while in state " . get_class($state) : ''));
+                    throw new TransitioningException(
+                        "$transitionClass not found" .
+                        ($state ? " while in state " . get_class($state) : '')
+                    );
                 }
 
                 /** @var TransitionContract $instance */
