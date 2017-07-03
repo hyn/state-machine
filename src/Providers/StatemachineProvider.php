@@ -24,10 +24,10 @@ class StatemachineProvider extends ServiceProvider
 
     protected function registerConfigurations()
     {
+        $configPath = __DIR__ . '/../config/state-machine.php';
         $this->publishes([
-            __DIR__ . '/../config/state-machine.php' => config_path('state-machine.php')
+            $configPath => config_path('state-machine.php')
         ], 'config');
-
-        $this->mergeConfigFrom(config_path('state-machine.php'), 'state-machine');
+        $this->mergeConfigFrom($configPath, 'state-machine');
     }
 }
