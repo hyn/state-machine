@@ -171,7 +171,7 @@ class Statemachine implements StatemachineContract
 
         /** @var TransitionContract $transition */
         foreach ($this->transitionInstances($currentState) as $transition) {
-            if (!$nextState || ($nextState && !in_array($nextState, $transition->suggests()))) {
+            if (!$nextState || ($nextState && in_array($nextState, $transition->suggests()))) {
                 // Do not offer a transition that can't be automated.
                 if (!$nextState && app()->runningInConsole() && !$transition->automated()) {
                     continue;
