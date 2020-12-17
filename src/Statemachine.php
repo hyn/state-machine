@@ -49,12 +49,10 @@ class Statemachine implements StatemachineContract
         if (! $definition) {
             foreach (config('state-machine.definitions', []) as $definition) {
                 /** @var MachineDefinitionContract $definition */
-                $definition = app()->make($definition);
+                $definition = resolve($definition);
 
                 if (in_array(get_class($this->model), $definition->models())) {
-                    $this->definition = $definition;
-
-                    return;
+                    break;
                 }
             }
         }
@@ -66,6 +64,8 @@ class Statemachine implements StatemachineContract
      * Moves forward based on the priorities and met requirements of the transitions.
      *
      * @return StateContract|bool
+     * @throws InvalidStateException
+     * @throws TransitioningException
      */
     public function forward()
     {
@@ -86,6 +86,7 @@ class Statemachine implements StatemachineContract
      * Whether the model is currently in a transition.
      *
      * @return bool
+     * @throws InvalidStateException
      */
     public function isInTransition() : bool
     {
@@ -96,6 +97,7 @@ class Statemachine implements StatemachineContract
      * Loads the current state.
      *
      * @return StateContract|TransitionContract
+     * @throws InvalidStateException
      */
     public function current()
     {
@@ -119,7 +121,7 @@ class Statemachine implements StatemachineContract
             throw new InvalidStateException($state);
         }
 
-        list($type, $identifier) = explode('.', $state);
+        [$type, $identifier] = explode('.', $state);
 
         $type = Str::plural($type);
 
@@ -127,7 +129,7 @@ class Statemachine implements StatemachineContract
             /** @var State $instance */
             $instance = new $state($this->model);
 
-            if ($instance->name() == $identifier) {
+            if ($instance->name() === $identifier) {
                 return $instance;
             }
         }
@@ -141,7 +143,7 @@ class Statemachine implements StatemachineContract
      * @param string $position
      * @return Collection|StateContract
      */
-    public function resolveStateByPosition($position = 'initial')
+    public function resolveStateByPosition(string $position)
     {
         $method = Str::camel("is_{$position}");
 
@@ -158,12 +160,6 @@ class Statemachine implements StatemachineContract
         return $found->count() > 1 ? $found : $found->first();
     }
 
-    /**
-     * Loads the transition with the highest priority that have their requirements met.
-     *
-     * @param StateContract|null $nextState
-     * @return TransitionContract
-     */
     public function identifyNextTransition(StateContract $nextState = null): ?TransitionContract
     {
         $currentState = $this->current();
@@ -245,46 +241,42 @@ class Statemachine implements StatemachineContract
             throw new TransitioningException("Transition cannot be automated.");
         }
 
-        $current = $this->current();
+        $transitioning = new Processing(
+            $this->getModel(),
+            $this->current(),
+            $transition
+        );
 
         $this->setModelState($transition);
 
-        event(new Transitioning($transition));
+        event(new Transitioning($transitioning));
 
         try {
-            $result = $transition->fire();
+            $transitioning->process();
         } catch (TransitioningException $e) {
             $this->log($transition, 'transition failed, reset attempt');
-            $reset = $transition->reset();
+            $transitioning->reset();
 
-            if ($reset instanceof StateContract) {
-                $this->setModelState($reset);
+            if ($transitioning->to) {
+                $this->setModelState($transitioning->to);
 
-                return $reset;
+                return $transitioning->to;
             }
 
-            return $current;
+            return $transitioning->from;
         }
 
-        $state = Arr::get($result, 'state');
-
-        if ($result instanceof StateContract) {
-            $state = $result;
+        if ($transitioning->to) {
+            $this->log($transitioning->to, "transition returned state, setting as current");
+            $this->setModelState($transitioning->to);
         }
 
-        if ($state) {
-            $this->log($state, "transition returned state, setting as current");
-            $this->setModelState($state);
-        }
+        event(new Transitioned($transitioning));
 
-        event(new Transitioned($transition));
-
-        if ($result instanceof Response) {
-            return $result;
-        } elseif (($response = Arr::get($result, 'response'))) {
-            return $response;
-        } elseif ($state) {
-            return $state;
+        if ($transitioning->response) {
+            return $transitioning->response;
+        } elseif ($transitioning->to) {
+            return $transitioning->to;
         }
     }
 
@@ -324,25 +316,13 @@ class Statemachine implements StatemachineContract
         }
     }
 
-    /**
-     * @param LoggerContract $logger
-     * @return $this
-     */
-    public function setLogger(LoggerContract $logger)
+    public function setLogger(LoggerContract $logger): self
     {
         $this->logger = $logger;
 
         return $this;
     }
 
-    /**
-     * Retries the last transition.
-     *
-     * @param TransitionContract|null $transition
-     *
-     * @return StateContract|bool
-     * @throws TransitioningException
-     */
     public function retry(TransitionContract $transition = null)
     {
         if ($this->current() instanceof TransitionContract) {
@@ -352,23 +332,11 @@ class Statemachine implements StatemachineContract
         return false;
     }
 
-    /**
-     * Sets the current state as the initial one.
-     *
-     * @return StateContract
-     */
     public function restart() : StateContract
     {
         return $this->moveTo($this->resolveStateByPosition('initial'));
     }
 
-    /**
-     * Tries to move to a specific state.
-     *
-     * @param StateContract $state
-     * @return StateContract
-     * @throws TransitioningException
-     */
     public function moveTo(StateContract $state) : StateContract
     {
 
@@ -381,27 +349,17 @@ class Statemachine implements StatemachineContract
         throw new TransitioningException("No transition found for moving to {$state->name}.");
     }
 
-    /**
-     * @return MachineDefinitionContract
-     */
     public function getDefinition(): MachineDefinitionContract
     {
         return $this->definition;
     }
 
-    /**
-     * @return ProcessedByStatemachine|Model
-     */
     public function getModel()
     {
         return $this->model;
     }
 
-    /**
-     * @param ProcessedByStatemachine $model
-     * @return $this
-     */
-    public function setModel(ProcessedByStatemachine $model)
+    public function setModel(ProcessedByStatemachine $model): self
     {
         $this->model = $model;
 

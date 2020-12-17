@@ -2,17 +2,17 @@
 
 namespace Hyn\Statemachine\Events;
 
-use Hyn\Statemachine\Contracts\TransitionContract;
+use Hyn\Statemachine\Processing;
 
 abstract class AbstractTransitionEvent
 {
     /**
-     * @var TransitionContract
+     * @var Processing
      */
-    public $transition;
+    public $processing;
 
-    public function __construct(TransitionContract $transition)
+    public function __construct(Processing $processing)
     {
-        $this->transition = $transition;
+        $this->processing = $processing;
     }
 }

@@ -2,12 +2,24 @@
 
 namespace Hyn\Statemachine;
 
+use Hyn\Statemachine\Contracts\ProcessedByStatemachine;
 use Hyn\Statemachine\Contracts\TransitionContract;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Bus\DispatchesJobs;
 
 abstract class Transition extends Named implements TransitionContract
 {
     use DispatchesJobs;
+
+    /**
+     * @var ProcessedByStatemachine|Model
+     */
+    protected $model;
+
+    public function __construct(ProcessedByStatemachine $model)
+    {
+        $this->model = $model;
+    }
 
     /**
      * Whether the transition can be retried.

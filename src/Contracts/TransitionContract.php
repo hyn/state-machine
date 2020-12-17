@@ -2,8 +2,12 @@
 
 namespace Hyn\Statemachine\Contracts;
 
+use Illuminate\Http\Response;
+
 interface TransitionContract extends MustBeNamed
 {
+    public function __construct(ProcessedByStatemachine $model);
+
     /**
      * Whether the transition can be retried.
      *
@@ -47,13 +51,14 @@ interface TransitionContract extends MustBeNamed
     /**
      * Processing the transition.
      *
-     * @return StateContract
+     * @return StateContract|Response|array ; ['response' => .., 'state' => ...] or State instance or Response instance
      */
-    public function fire() : StateContract;
+    public function fire();
 
     /**
      * In case something went wrong, reset.
      *
+     * @param ProcessedByStatemachine $model
      * @return StateContract|boolean
      */
     public function reset();

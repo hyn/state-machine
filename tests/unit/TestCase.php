@@ -7,6 +7,7 @@ use Illuminate\Database\Capsule\Manager;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Events\Dispatcher;
+use Illuminate\Foundation\Application;
 
 abstract class TestCase extends \PHPUnit\Framework\TestCase
 {
@@ -38,7 +39,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
             touch($this->databaseFile);
 
-            $container = new Container;
+            $container = new Application(__DIR__.'/../../');
             Container::setInstance($container);
 
             $container->bind('events', function ($container) {
