@@ -111,23 +111,23 @@ class Statemachine implements StatemachineContract
      *
      * @eg: state.paid
      *
-     * @param string $state
+     * @param string $seek
      * @return StateContract|TransitionContract
      * @throws InvalidStateException
      */
-    public function resolveByName($state = '')
+    public function resolveByName(string $seek = '')
     {
-        if (empty($state) || !strstr($state, '.')) {
-            throw new InvalidStateException($state);
+        if (empty($seek) || !strstr($seek, '.')) {
+            throw new InvalidStateException($seek);
         }
 
-        [$type, $identifier] = explode('.', $state);
+        [$type, $identifier] = explode('.', $seek);
 
         $type = Str::plural($type);
 
-        foreach (Arr::get($this->definition->mapping(), $type, []) as $state) {
-            /** @var State $instance */
-            $instance = new $state($this->model);
+        foreach (Arr::get($this->definition->mapping(), $type, []) as $mapped) {
+            /** @var State|Transition $instance */
+            $instance = new $mapped($this->model);
 
             if ($instance->name() === $identifier) {
                 return $instance;
@@ -225,7 +225,7 @@ class Statemachine implements StatemachineContract
      * @param TransitionContract $transition
      * @param bool $force
      * @return Response|StateContract
-     * @throws TransitioningException
+     * @throws TransitioningException|InvalidStateException
      */
     public function moveThrough(TransitionContract $transition, $force = false)
     {
