@@ -70,8 +70,11 @@ class FelineTest extends TestCase
      */
     public function moves_through_a_transition()
     {
+        $current = $this->machine->current();
+
         $state = $this->machine->forward();
 
         $this->assertTrue($state instanceof State);
+        $this->assertNotEquals($current, $state);
     }
 }
