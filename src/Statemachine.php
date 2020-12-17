@@ -294,19 +294,6 @@ class Statemachine implements StatemachineContract
         }
     }
 
-    public function normalizeModelState($stateOrTransition): string
-    {
-        if (is_subclass_of($stateOrTransition, TransitionContract::class)) {
-            $type = 'transition';
-        } elseif (is_subclass_of($stateOrTransition, StateContract::class)) {
-            $type = 'state';
-        } else {
-            throw new InvalidArgumentException('State or transition needed.');
-        }
-
-        return "{$type}.{$stateOrTransition->name()}";
-    }
-
     /**
      * Updates the state of the model.
      *
@@ -314,7 +301,7 @@ class Statemachine implements StatemachineContract
      */
     public function setModelState($stateOrTransition)
     {
-        $this->model->state = $this->normalizeModelState($stateOrTransition);
+        $this->model->state = $stateOrTransition->name();
 
         if ($this->model->isDirty('state') && $this->model->exists) {
             $this->model->save();
