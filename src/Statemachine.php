@@ -17,6 +17,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 class Statemachine implements StatemachineContract
 {
@@ -35,12 +36,6 @@ class Statemachine implements StatemachineContract
      */
     protected $definition;
 
-    /**
-     * Statemachine constructor.
-     *
-     * @param ProcessedByStatemachine        $model
-     * @param MachineDefinitionContract|null $definition
-     */
     public function __construct(
         ProcessedByStatemachine $model,
         MachineDefinitionContract $definition = null
@@ -49,13 +44,19 @@ class Statemachine implements StatemachineContract
         $this->retrieveDefinition($definition);
     }
 
-    /**
-     * @param MachineDefinitionContract|null $definition
-     */
     protected function retrieveDefinition(MachineDefinitionContract $definition = null)
     {
-        if (!$definition) {
-            // .. todo, should try to retrieve based on configuration file
+        if (! $definition) {
+            foreach (config('state-machine.definitions', []) as $definition) {
+                /** @var MachineDefinitionContract $definition */
+                $definition = app()->make($definition);
+
+                if (in_array(get_class($this->model), $definition->models())) {
+                    $this->definition = $definition;
+
+                    return;
+                }
+            }
         }
 
         $this->definition = $definition;
@@ -160,10 +161,10 @@ class Statemachine implements StatemachineContract
     /**
      * Loads the transition with the highest priority that have their requirements met.
      *
-     * @param StateContract $nextState
+     * @param StateContract|null $nextState
      * @return TransitionContract
      */
-    public function identifyNextTransition(StateContract $nextState = null)
+    public function identifyNextTransition(StateContract $nextState = null): ?TransitionContract
     {
         $currentState = $this->current();
 
@@ -171,7 +172,7 @@ class Statemachine implements StatemachineContract
 
         /** @var TransitionContract $transition */
         foreach ($this->transitionInstances($currentState) as $transition) {
-            if (!$nextState || ($nextState && in_array($nextState, $transition->suggests()))) {
+            if (!$nextState || in_array($nextState, $transition->suggests())) {
                 // Do not offer a transition that can't be automated.
                 if (!$nextState && app()->runningInConsole() && !$transition->automated()) {
                     continue;
@@ -196,11 +197,11 @@ class Statemachine implements StatemachineContract
     }
 
     /**
-     * @param StateContract $state
+     * @param StateContract|null $state
      * @return Collection
      * @throws TransitioningException
      */
-    public function transitionInstances(StateContract $state = null)
+    public function transitionInstances(StateContract $state = null): Collection
     {
         $collection = new Collection();
 
@@ -240,6 +241,7 @@ class Statemachine implements StatemachineContract
         // Prevent non automated transitions from running automated.
         if (!$force && !$transition->automated() && app()->runningInConsole()) {
             $this->log($transition, 'cannot run automated');
+
             throw new TransitioningException("Transition cannot be automated.");
         }
 
@@ -277,7 +279,9 @@ class Statemachine implements StatemachineContract
 
         event(new Transitioned($transition));
 
-        if (($response = Arr::get($result, 'response'))) {
+        if ($result instanceof Response) {
+            return $result;
+        } elseif (($response = Arr::get($result, 'response'))) {
             return $response;
         } elseif ($state) {
             return $state;
@@ -301,7 +305,7 @@ class Statemachine implements StatemachineContract
     /**
      * Updates the state of the model.
      *
-     * @param $stateOrTransition
+     * @param TransitionContract|StateContract $stateOrTransition
      */
     public function setModelState($stateOrTransition)
     {
@@ -309,6 +313,8 @@ class Statemachine implements StatemachineContract
             $type = 'transition';
         } elseif (is_subclass_of($stateOrTransition, StateContract::class)) {
             $type = 'state';
+        } else {
+            throw new InvalidArgumentException('State or transition needed.');
         }
 
         $this->model->state = "{$type}.{$stateOrTransition->name()}";

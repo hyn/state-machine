@@ -40,7 +40,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
 
             $container = new Container;
             Container::setInstance($container);
-            
+
             $container->bind('events', function ($container) {
                 new Dispatcher($container);
             });
