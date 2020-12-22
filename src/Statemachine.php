@@ -121,7 +121,7 @@ class Statemachine implements StatemachineContract
             throw new InvalidStateException($seek);
         }
 
-        [$type, $identifier] = explode('.', $seek);
+        [$type, $_] = explode('.', $seek);
 
         $type = Str::plural($type);
 
@@ -129,7 +129,7 @@ class Statemachine implements StatemachineContract
             /** @var State|Transition $instance */
             $instance = new $mapped($this->model);
 
-            if ($instance->name() === $identifier) {
+            if ($instance->name() === $seek) {
                 return $instance;
             }
         }
