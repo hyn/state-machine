@@ -15,7 +15,7 @@ class Processing
      */
     public $model;
     /**
-     * @var StateContract
+     * @var StateContract|TransitionContract
      */
     public $from;
     /**
@@ -32,7 +32,7 @@ class Processing
      */
     public $to;
 
-    public function __construct(ProcessedByStatemachine $model, StateContract $from, TransitionContract $transition)
+    public function __construct(ProcessedByStatemachine $model, $from, TransitionContract $transition)
     {
         $this->model = $model;
         $this->from = $from;
