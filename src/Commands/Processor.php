@@ -9,7 +9,7 @@ use Illuminate\Support\Collection;
 
 class Processor extends Command
 {
-    protected $signature = 'state-machine:processor';
+    protected $signature = 'state-machine:processor {--queue : force all processing attempts into the queue}';
     protected $description = 'Moves objects through their state machines.';
 
 
@@ -44,6 +44,14 @@ class Processor extends Command
      */
     protected function attemptTransitioning($model, $definition)
     {
-        return (new Statemachine($model, $definition))->forward();
+        $forward = function () use ($model, $definition) {
+            (new Statemachine($model, $definition))->forward();
+        };
+
+        if ($this->option('queue')) {
+            dispatch($forward);
+        } else {
+            $forward();
+        }
     }
 }
