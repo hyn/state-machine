@@ -22,7 +22,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
      */
     protected $booted = false;
 
-    public function setUp()
+    public function setUp(): void
     {
         $this->databaseFile = __DIR__ . '/../database/testing.sqlite';
 
@@ -80,7 +80,7 @@ abstract class TestCase extends \PHPUnit\Framework\TestCase
         // ..
     }
 
-    public function tearDown()
+    public function tearDown(): void
     {
         $this->down();
 
