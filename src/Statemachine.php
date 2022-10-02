@@ -17,7 +17,6 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
-use InvalidArgumentException;
 
 class Statemachine implements StatemachineContract
 {
@@ -47,9 +46,9 @@ class Statemachine implements StatemachineContract
     protected function retrieveDefinition(MachineDefinitionContract $definition = null)
     {
         if (! $definition) {
-            foreach (config('state-machine.definitions', []) as $definition) {
+            foreach (config('state-machine.definitions', []) as $configuredDefinition) {
                 /** @var MachineDefinitionContract $definition */
-                $definition = resolve($definition);
+                $definition = resolve($configuredDefinition);
 
                 if (in_array(get_class($this->model), $definition->models())) {
                     break;
@@ -63,11 +62,11 @@ class Statemachine implements StatemachineContract
     /**
      * Moves forward based on the priorities and met requirements of the transitions.
      *
-     * @return StateContract|bool
+     * @return Response|StateContract|bool
      * @throws InvalidStateException
      * @throws TransitioningException
      */
-    public function forward()
+    public function forward(): Response|StateContract|bool
     {
         if ($this->isInTransition()) {
             return false;
@@ -99,7 +98,7 @@ class Statemachine implements StatemachineContract
      * @return StateContract|TransitionContract
      * @throws InvalidStateException
      */
-    public function current()
+    public function current(): StateContract|TransitionContract
     {
         return $this->model->state
             ? $this->resolveByName($this->model->state)
@@ -115,13 +114,13 @@ class Statemachine implements StatemachineContract
      * @return StateContract|TransitionContract
      * @throws InvalidStateException
      */
-    public function resolveByName(string $seek = '')
+    public function resolveByName(string $seek = ''): StateContract|TransitionContract
     {
-        if (empty($seek) || !strstr($seek, '.')) {
+        if (empty($seek) || ! str_contains($seek, '.')) {
             throw new InvalidStateException($seek);
         }
 
-        [$type, $_] = explode('.', $seek);
+        [$type] = explode('.', $seek, 1);
 
         $type = Str::plural($type);
 
@@ -133,6 +132,8 @@ class Statemachine implements StatemachineContract
                 return $instance;
             }
         }
+
+        throw new InvalidStateException($seek);
     }
 
     /**
@@ -143,7 +144,7 @@ class Statemachine implements StatemachineContract
      * @param string $position
      * @return Collection|StateContract
      */
-    public function resolveStateByPosition(string $position)
+    public function resolveStateByPosition(string $position): StateContract|Collection
     {
         $method = Str::camel("is_{$position}");
 
@@ -227,7 +228,7 @@ class Statemachine implements StatemachineContract
      * @return Response|StateContract
      * @throws TransitioningException|InvalidStateException
      */
-    public function moveThrough(TransitionContract $transition, $force = false)
+    public function moveThrough(TransitionContract $transition, $force = false): Response|StateContract
     {
         // Prevent transitions when Object already in transition.
         if (!$force && $this->isInTransition()) {
@@ -280,11 +281,7 @@ class Statemachine implements StatemachineContract
         }
     }
 
-    /**
-     * @param      $stateOrTransition
-     * @param null $message
-     */
-    protected function log($stateOrTransition, $message = null)
+    protected function log(StateContract|TransitionContract $stateOrTransition, ?string $message = null): void
     {
         if ($this->logger) {
             $from = $this->current() ? $this->current()->name() : 'x';
@@ -294,12 +291,7 @@ class Statemachine implements StatemachineContract
         }
     }
 
-    /**
-     * Updates the state of the model.
-     *
-     * @param TransitionContract|StateContract $stateOrTransition
-     */
-    public function setModelState($stateOrTransition)
+    public function setModelState(StateContract|TransitionContract $stateOrTransition): void
     {
         $this->model->state = $stateOrTransition->name();
 
@@ -315,7 +307,7 @@ class Statemachine implements StatemachineContract
         return $this;
     }
 
-    public function retry(TransitionContract $transition = null)
+    public function retry(TransitionContract $transition = null): Response|StateContract|bool
     {
         if ($this->current() instanceof TransitionContract) {
             return $this->moveThrough($transition ?: $this->current(), true);
@@ -346,7 +338,7 @@ class Statemachine implements StatemachineContract
         return $this->definition;
     }
 
-    public function getModel()
+    public function getModel(): Model|ProcessedByStatemachine
     {
         return $this->model;
     }
