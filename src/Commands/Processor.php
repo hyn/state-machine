@@ -20,14 +20,20 @@ class Processor extends Command
 
         $definitions->each(function ($definition) {
             if (!class_exists($definition)) {
+                $this->warn("State machine definition does not exist: $definition.");
+
                 return;
             }
+
+            $this->info("Processing machine definition: $definition.");
 
             /** @var MachineDefinitionContract $definition */
             $definition = new $definition;
 
             collect($definition->models())
                 ->each(function ($class) use ($definition) {
+                    $this->info("Processing for model: $class.");
+
                     forward_static_call([$class, 'chunk'], 50, function ($objects) use ($definition) {
                         foreach ($objects as $object) {
                             $this->attemptTransitioning($object, $definition);
@@ -45,13 +51,23 @@ class Processor extends Command
     protected function attemptTransitioning($model, $definition)
     {
         $forward = function () use ($model, $definition) {
-            (new Statemachine($model, $definition))->forward();
+            return (new Statemachine($model, $definition))->forward();
         };
 
         if ($this->option('queue')) {
             dispatch($forward);
+
+            $this->info("Transitioning in queue: {$model::class}:{$model->getKey()}");
         } else {
-            $forward();
+            try {
+                $response = $forward();
+            } catch (\Exception $e) {
+                $this->info("Failure transitioning: {$model::class}:{$model->getKey()}");
+
+                throw $e;
+            }
+
+            $this->info("Transitioned: {$model::class}:{$model->getKey()} with response " . (is_object($response) ? get_class($response) : (string) $response));
         }
     }
 }
