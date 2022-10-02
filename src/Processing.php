@@ -5,6 +5,7 @@ namespace Hyn\Statemachine;
 use Hyn\Statemachine\Contracts\ProcessedByStatemachine;
 use Hyn\Statemachine\Contracts\StateContract;
 use Hyn\Statemachine\Contracts\TransitionContract;
+use Hyn\Statemachine\Exceptions\InvalidStateException;
 use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 
@@ -70,6 +71,11 @@ class Processing
 
         if ($result instanceof Response) {
             $this->response = $result;
+        }
+
+        if ($this->to instanceof TransitionContract || $result instanceof TransitionContract) {
+            throw new InvalidStateException('Process response cannot be a Transition.');
+
         }
     }
 }
