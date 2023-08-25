@@ -54,20 +54,22 @@ class Processor extends Command
             return (new Statemachine($model, $definition))->forward();
         };
 
+        $class = $model::class;
+
         if ($this->option('queue')) {
             dispatch($forward);
 
-            $this->info("Transitioning in queue: {$model::class}:{$model->getKey()}");
+            $this->info("Transitioning in queue: $class:{$model->getKey()}");
         } else {
             try {
                 $response = $forward();
             } catch (\Exception $e) {
-                $this->info("Failure transitioning: {$model::class}:{$model->getKey()}");
+                $this->info("Failure transitioning: $class:{$model->getKey()}");
 
                 throw $e;
             }
 
-            $this->info("Transitioned: {$model::class}:{$model->getKey()} with response " . (is_object($response) ? get_class($response) : (string) $response));
+            $this->info("Transitioned: $class:{$model->getKey()} with response " . (is_object($response) ? get_class($response) : (string) $response));
         }
     }
 }
