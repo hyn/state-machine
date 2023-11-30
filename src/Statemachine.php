@@ -120,7 +120,7 @@ class Statemachine implements StatemachineContract
             throw new InvalidStateException($seek);
         }
 
-        [$type] = explode('.', $seek, 1);
+        $type = Str::before($seek, '.');
 
         $type = Str::plural($type);
 
