@@ -38,7 +38,8 @@ class CatDefinition implements MachineDefinitionContract
                 Awake::class
             ],
             'transitions' => [
-                WakesUp::class
+                WakesUp::class,
+
             ]
         ];
     }

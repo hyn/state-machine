@@ -51,15 +51,15 @@ interface TransitionContract extends MustBeNamed
     /**
      * Processing the transition.
      *
-     * @return StateContract|Response|array ; ['response' => .., 'state' => ...] or State instance or Response instance
+     * @return StateContract|TransitionContract|Response|array<string>
+     *     ['response' => ..., 'state' => ...] or State, Transition or Response instance
      */
-    public function fire();
+    public function fire(): StateContract|TransitionContract|Response|array;
 
     /**
      * In case something went wrong, reset.
      *
-     * @param ProcessedByStatemachine $model
-     * @return StateContract|boolean
+     * @return StateContract|TransitionContract|Response|array
      */
-    public function reset();
+    public function reset(): StateContract|TransitionContract|Response|array;
 }

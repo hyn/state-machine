@@ -5,6 +5,7 @@ namespace Hyn\Statemachine\Commands;
 use Hyn\Statemachine\Contracts\MachineDefinitionContract;
 use Hyn\Statemachine\Statemachine;
 use Illuminate\Console\Command;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
 class Processor extends Command
@@ -13,10 +14,9 @@ class Processor extends Command
     protected $description = 'Moves objects through their state machines.';
 
 
-    public function handle()
+    public function handle(): int
     {
-        /** @var Collection $definitions */
-        $definitions = collect(config('state-machine.definitions', []));
+        $definitions = Collection::make(config('state-machine.definitions', []));
 
         $definitions->each(function ($definition) {
             if (!class_exists($definition)) {
@@ -41,14 +41,11 @@ class Processor extends Command
                     });
                 });
         });
+
+        return self::SUCCESS;
     }
 
-    /**
-     * @param $model
-     * @param $definition
-     * @return bool|\Hyn\Statemachine\Contracts\StateContract
-     */
-    protected function attemptTransitioning($model, $definition)
+    protected function attemptTransitioning(Model $model, MachineDefinitionContract $definition): void
     {
         $forward = function () use ($model, $definition) {
             return (new Statemachine($model, $definition))->forward();
@@ -64,7 +61,7 @@ class Processor extends Command
             try {
                 $response = $forward();
             } catch (\Exception $e) {
-                $this->info("Failure transitioning: $class:{$model->getKey()}");
+                $this->error("Failure transitioning: $class:{$model->getKey()}");
 
                 throw $e;
             }

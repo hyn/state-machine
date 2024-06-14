@@ -3,8 +3,10 @@
 namespace Hyn\Statemachine\Stubs\Transitions\Cat;
 
 use Hyn\Statemachine\Contracts\StateContract;
+use Hyn\Statemachine\Contracts\TransitionContract;
 use Hyn\Statemachine\Stubs\States\Cat\Awake;
 use Hyn\Statemachine\Transition;
+use Illuminate\Http\Response;
 
 class WakesUp extends Transition
 {
@@ -30,22 +32,12 @@ class WakesUp extends Transition
         ];
     }
 
-    /**
-     * Processing the transition.
-     *
-     * @return StateContract
-     */
-    public function fire() : StateContract
+    public function fire(): Response|StateContract|array|TransitionContract
     {
         return new Awake($this->model);
     }
 
-    /**
-     * In case something went wrong, reset.
-     *
-     * @return StateContract|boolean
-     */
-    public function reset()
+    public function reset(): Response|StateContract|array|TransitionContract
     {
         // TODO: Implement reset() method.
     }

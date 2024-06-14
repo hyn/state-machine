@@ -40,7 +40,7 @@ class Processing
         $this->transition = $transition;
     }
 
-    public function process()
+    public function process(): array|Response|StateContract|TransitionContract
     {
         $result = $this->transition->fire();
 
@@ -49,7 +49,7 @@ class Processing
         return $result;
     }
 
-    public function reset()
+    public function reset(): Response|StateContract|bool|array|TransitionContract
     {
         $result = $this->transition->reset();
 
@@ -58,24 +58,19 @@ class Processing
         return $result;
     }
 
-    protected function processResult($result)
+    protected function processResult($result): void
     {
         if (is_array($result)) {
             $this->response = Arr::get($result, 'response');
-            $this->to = Arr::get($result, 'state');
+            $this->to = Arr::get($result, 'state') ?? Arr::get($result, 'response');
         }
 
-        if ($result instanceof StateContract) {
+        if ($result instanceof StateContract || $result instanceof TransitionContract) {
             $this->to = $result;
         }
 
         if ($result instanceof Response) {
             $this->response = $result;
-        }
-
-        if ($this->to instanceof TransitionContract || $result instanceof TransitionContract) {
-            throw new InvalidStateException('Process response cannot be a Transition.');
-
         }
     }
 }

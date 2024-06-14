@@ -225,10 +225,10 @@ class Statemachine implements StatemachineContract
      *
      * @param TransitionContract $transition
      * @param bool $force
-     * @return Response|StateContract
+     * @return Response|StateContract|TransitionContract
      * @throws TransitioningException|InvalidStateException
      */
-    public function moveThrough(TransitionContract $transition, $force = false): Response|StateContract
+    public function moveThrough(TransitionContract $transition, $force = false): Response|StateContract|TransitionContract
     {
         // Prevent transitions when Object already in transition.
         if (!$force && $this->isInTransition()) {

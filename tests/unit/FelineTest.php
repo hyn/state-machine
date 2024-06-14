@@ -6,6 +6,7 @@ use Hyn\Statemachine\State;
 use Hyn\Statemachine\Statemachine;
 use Hyn\Statemachine\Stubs\Definitions\CatDefinition;
 use Hyn\Statemachine\Stubs\Models\Cat;
+use Hyn\Statemachine\Stubs\Transitions\Cat\LicksPaw;
 use Hyn\Statemachine\Transition;
 
 class FelineTest extends TestCase
@@ -76,5 +77,16 @@ class FelineTest extends TestCase
 
         $this->assertTrue($state instanceof State);
         $this->assertNotEquals($current, $state);
+    }
+
+    /**
+     * @test
+     */
+    public function chains_through_transitions()
+    {
+        $state = $this->machine->moveThrough(new LicksPaw($this->machine->getModel()));
+
+
+        $this->assertTrue($state instanceof LicksPaw);
     }
 }
