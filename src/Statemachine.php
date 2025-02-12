@@ -330,7 +330,7 @@ class Statemachine implements StatemachineContract
             return $this->moveThrough($transition);
         }
 
-        throw new TransitioningException("No transition found for moving to {$state->name}.");
+        throw new TransitioningException("No transition found for moving to {$state->name()}.");
     }
 
     public function getDefinition(): MachineDefinitionContract
