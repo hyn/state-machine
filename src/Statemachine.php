@@ -169,7 +169,7 @@ class Statemachine implements StatemachineContract
 
         /** @var TransitionContract $transition */
         foreach ($this->transitionInstances($currentState) as $transition) {
-            if (!$nextState || in_array($nextState, $transition->suggests())) {
+            if (!$nextState || $this->suggests($transition, $nextState)) {
                 // Do not offer a transition that can't be automated.
                 if (!$nextState && app()->runningInConsole() && !$transition->automated()) {
                     continue;
@@ -181,16 +181,29 @@ class Statemachine implements StatemachineContract
             }
         }
 
-        // Sort the transitions based on priority.
-        $requirementsMet->sort(function ($a, $b) {
-            if ($a->priority() == $b->priority()) {
-                return 0;
+        // Highest priority first; the sort is stable, so equal priorities keep declaration order.
+        return $requirementsMet
+            ->sortByDesc(fn (TransitionContract $transition) => $transition->priority())
+            ->first();
+    }
+
+    /**
+     * Whether the transition suggests moving into the given state.
+     *
+     * @param TransitionContract $transition
+     * @param StateContract $state
+     * @return bool
+     */
+    protected function suggests(TransitionContract $transition, StateContract $state): bool
+    {
+        // Suggestions are class names (or instances), never the state object itself.
+        foreach ($transition->suggests() as $suggested) {
+            if ($state instanceof $suggested) {
+                return true;
             }
+        }
 
-            return ($a->priority() < $b->priority() ? -1 : 1);
-        });
-
-        return $requirementsMet->first();
+        return false;
     }
 
     /**
