@@ -2,6 +2,7 @@
 
 namespace Hyn\Statemachine;
 
+use Hyn\Statemachine\Contracts\HandlesFailure;
 use Hyn\Statemachine\Contracts\MachineDefinitionContract;
 use Hyn\Statemachine\Contracts\ProcessedByStatemachine;
 use Hyn\Statemachine\Contracts\StateContract;
@@ -17,6 +18,7 @@ use Illuminate\Http\Response;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
+use Throwable;
 
 class Statemachine implements StatemachineContract
 {
@@ -278,6 +280,10 @@ class Statemachine implements StatemachineContract
             }
 
             return $transitioning->from;
+        } catch (Throwable $e) {
+            $this->fail($transitioning, $e);
+
+            throw $e;
         }
 
         if ($transitioning->to) {
@@ -291,6 +297,34 @@ class Statemachine implements StatemachineContract
             return $transitioning->response;
         } elseif ($transitioning->to) {
             return $transitioning->to;
+        }
+    }
+
+    /**
+     * Lets the transition move the model out of an unhandled failure, which
+     * would otherwise leave it in the transition for good.
+     *
+     * @param Processing $transitioning
+     * @param Throwable $e
+     */
+    protected function fail(Processing $transitioning, Throwable $e): void
+    {
+        if (! $transitioning->transition instanceof HandlesFailure) {
+            return;
+        }
+
+        try {
+            $state = $transitioning->transition->failed($e, $transitioning);
+        } catch (Throwable $handlerException) {
+            // The original exception is rethrown by the caller, so only report this one.
+            report($handlerException);
+
+            return;
+        }
+
+        if ($state) {
+            $this->log($state, 'transition failed unexpectedly, setting as current');
+            $this->setModelState($state);
         }
     }
 

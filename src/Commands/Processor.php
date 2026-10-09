@@ -3,6 +3,7 @@
 namespace Hyn\Statemachine\Commands;
 
 use Hyn\Statemachine\Contracts\MachineDefinitionContract;
+use Hyn\Statemachine\Jobs\Forward;
 use Hyn\Statemachine\Statemachine;
 use Illuminate\Console\Command;
 use Illuminate\Support\Collection;
@@ -57,7 +58,8 @@ class Processor extends Command
         $class = $model::class;
 
         if ($this->option('queue')) {
-            dispatch($forward);
+            // Skipped by the queue while an earlier attempt for this model is still pending.
+            Forward::dispatch($model, get_class($definition));
 
             $this->info("Transitioning in queue: $class:{$model->getKey()}");
         } else {

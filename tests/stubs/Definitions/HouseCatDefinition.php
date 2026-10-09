@@ -27,7 +27,9 @@ class HouseCatDefinition implements MachineDefinitionContract
             ],
             'transitions' => [
                 Transitions\Cat\Eating::class,
+                Transitions\Cat\FallsOffTable::class,
                 Transitions\Cat\Grooming::class,
+                Transitions\Cat\KnocksOverVase::class,
                 Transitions\Cat\Napping::class,
                 Transitions\Cat\Purring::class,
             ]
