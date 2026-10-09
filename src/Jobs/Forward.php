@@ -43,9 +43,13 @@ class Forward implements ShouldQueue, ShouldBeUnique
         public string $definition
     ) {}
 
+    /**
+     * By table rather than class, so a subclass of the model (e.g. one adding
+     * scopes) shares the lock with the class the processor dispatches for.
+     */
     public function uniqueId(): string
     {
-        return get_class($this->model) . ':' . $this->model->getKey();
+        return $this->definition . ':' . $this->model->getTable() . ':' . $this->model->getKey();
     }
 
     public function handle(): void
